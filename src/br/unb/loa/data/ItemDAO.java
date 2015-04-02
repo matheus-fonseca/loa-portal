@@ -1,7 +1,10 @@
 package br.unb.loa.data;
 
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
+
+import sun.nio.cs.ext.ISO_8859_11;
 
 import br.unb.loa.model.Classifier;
 import br.unb.loa.model.ClassifierType;
@@ -24,6 +27,9 @@ public class ItemDAO implements SimpleDAO<Item, ClassifierType>{
 	private static String EMPENHADO_SPARQL = "empenhado";
 	private static String LIQUIDADO_SPARQL = "liquidado";
 	private static String PAGO_SPARQL = "pago";
+	
+	public static final Charset ISO_8859_1 = Charset.forName("ISO-8859-1");
+    public static final Charset UTF_8 = Charset.forName("UTF-8");
 	
 	public ItemDAO(){
 		this.endpoint = new EndpointSPARQL();
@@ -118,8 +124,14 @@ public class ItemDAO implements SimpleDAO<Item, ClassifierType>{
 				codeNode = qsol.get(CODE_SPARQL + type.getId());
 				labelNode = qsol.get(type.getId());
 				
-				code = ((Literal)codeNode).getLexicalForm();
-				label = ((Literal)labelNode).getLexicalForm();
+//				code = ((Literal)codeNode).getLexicalForm();
+//				label = ((Literal)labelNode).getLexicalForm();
+
+				byte codeByteText[] = ((Literal)codeNode).getLexicalForm().getBytes(ISO_8859_1); 
+				code = new String(codeByteText, UTF_8);
+				
+				byte labelByteText[] = ((Literal)labelNode).getLexicalForm().getBytes(ISO_8859_1); 
+				label = new String(labelByteText, UTF_8);
 				
 				classifiers.add(new Classifier(label, code, year, type) );
 			}
