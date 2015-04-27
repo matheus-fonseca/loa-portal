@@ -64,7 +64,13 @@ footer, #push {
 	padding: 0;
 	float: left;
 	margin-right: 10px;
-	background: #eee;
+	background: #dbdbdb;
 	padding: 5px;
 	width: 143px;
+	min-height: 80px;
+	padding-bottom: 20px;
+}
+
+.sortableList a {
+	background-color: #003366;
 }

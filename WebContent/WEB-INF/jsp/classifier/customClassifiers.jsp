@@ -110,7 +110,7 @@
 						<ul id="availableClassifiers" class="sortableList classifierList">
 							<c:forEach items="${enumList}" var="classifier">
 								<li data-value="${classifier.id}">
-									<a class="button tiny expand" >${classifier.name}</a>
+									<a class="button tiny expand radius" >${classifier.name}</a>
 								</li>
 							</c:forEach>
 						</ul>

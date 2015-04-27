@@ -17,18 +17,21 @@ public class EndpointSPARQL {
 
 	private static final String DEFAULT_ENDPOINT_URL = "http://orcamento.dados.gov.br/sparql/";
 	private static final Logger logger = LoggerFactory.getLogger(EndpointSPARQL.class); 
-	private String endpointURL;
+	private static String endpointURL;
 	
-	
-	public EndpointSPARQL() {
+	static {
 		try {
-			this.endpointURL =  PropertiesLoader.getProperty("endpointURL");
+			EndpointSPARQL.endpointURL =  PropertiesLoader.getProperty("endpointURL");
 		} catch (IOException e) {
 			e.printStackTrace();
-			this.endpointURL  = DEFAULT_ENDPOINT_URL;
+			EndpointSPARQL.endpointURL  = DEFAULT_ENDPOINT_URL;
 		}
 		
-		logger.info("Using SPARQL endpoint = " + this.endpointURL);
+		logger.info("Using SPARQL endpoint = " + EndpointSPARQL.endpointURL);
+	}
+	
+	public EndpointSPARQL() {
+
 	}
 	
 	public ResultSet execSPARQLQuery(String query){
@@ -37,7 +40,7 @@ public class EndpointSPARQL {
 		
 		try {
 			
-			queryExecution = QueryExecutionFactory.sparqlService(endpointURL, query);
+			queryExecution = QueryExecutionFactory.sparqlService(EndpointSPARQL.endpointURL, query);
 			result = queryExecution.execSelect();
 		} catch(Exception e){
 			e.printStackTrace();
