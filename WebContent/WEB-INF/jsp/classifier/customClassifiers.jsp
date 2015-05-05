@@ -13,49 +13,11 @@
 	<link rel="stylesheet" href="<c:url value="/css/foundation.css" />" />
 	<link rel="stylesheet" href="<c:url value="/css/default.css" />" />
 	
-	<script type="text/javascript" src="<c:url value="/js/jquery.js"/>" ></script>
-	<script type="text/javascript" src="<c:url value="/js/modernizr.js"/>" ></script>
-	<script type="text/javascript" src="<c:url value="/js/jquery-ui-1.10.4.custom.js"/>" ></script>
 	
-	<script type="text/javascript">
-		$(function(){
-			$("#availableClassifiers, #selectedClassifiers").sortable({
-				connectWith: ".classifierList"
-			}).disableSelection();
-		});
-
-		$(function(){
-			$("#form").submit(function(){
-				var arrayClassifier = [];
-				
-				$("ul#selectedClassifiers li").each(function(){
-					arrayClassifier.push($(this).data("value"));
-				});
-
-				if(arrayClassifier.length == 0){
-					alert("Escolha pelo menos um classificador");
-					return false;
-				}
-
-				//Fix Firefox Back Button Error
-				for(var i=0; i<${enumSize}; i++){
-					$('input[name="idList[' +i+ ']"]').remove();
-				}
-					
-				for(var i=0; i<arrayClassifier.length; i++){
-					$('<input>').attr({
-						type: "hidden",
-						name: "idList" + "["+i+"]",
-						value: arrayClassifier[i]
-					}).appendTo('#form');					
-				}	
-			});
-		});
-
-	</script>
 </head>
 
 <body>
+	
 	<!-- Nav Bar -->
 <!--     <div id="header" style="background-color:#00500F"> -->
 <!-- 		<div id="barra-brasil"> -->
@@ -92,6 +54,29 @@
 
 		<!-- Main Blog Content -->
 		<div class="large-10 columns" role="content">
+			
+			<div id="modalTextFilter" class="reveal-modal small" data-reveal aria-labelledby="modalTitle" aria-hidden="true" role="dialog">
+				<h2 id="modalTitle">Filtragem textual</h2>
+				<h6 class="subheader"> Deixei em branco caso não deseje filtragem.</h6>
+				
+				<form id="form" action="<c:url value="/classificadores/busca"/>" method="post">
+					<div class="row">
+						<div id="textFilterInputsContainer" class="small-11 columns"></div>
+					</div>
+					
+					<div id="hiddenClassifiers"></div>
+					<input type="hidden" name="year" value="${defaultYear}">
+					
+					<div id="submitContainer" class="row">
+						<div class="small-11 columns">
+							<input type="submit" class="button" value="Pesquisar">
+						</div>
+					</div>
+				</form>
+				
+				<a id="dismissFilterButton" class="close-reveal-modal" aria-label="Close">&#215;</a>
+			</div>
+			
 			<article>
 			<h2><strong>Consulta Personalizada</strong></h2>
 			<hr/>
@@ -133,16 +118,12 @@
 			</div>
 			
 			<div class="large-1 columns end">
-				<form id="form" action="<c:url value="/classificadores/busca"/>" method="post">
-					<div id="hiddenClassifiers"></div>
-					<input type="hidden" name="year" value="${selectedYear}">
-					<input type="submit" class="button" value="Pesquisar">
-				</form>
+				<a id="goFilterButton" class="button">Pesquisar</a>
 			</div>
 			
 			</article>
+		<!-- End Main Content -->		
 		</div>
-		<!-- End Main Content -->
 	</div>
 	<!-- End Main Content and Sidebar -->
  
@@ -159,5 +140,87 @@
 	  </div>
 	</footer>
 	
+	<script type="text/javascript" src="<c:url value="/js/jquery.js"/>" ></script>
+	<script type="text/javascript" src="<c:url value="/js/jquery-ui-1.10.4.custom.js"/>" ></script>
+	<script type="text/javascript" src="<c:url value="/js/modernizr.js"/>" ></script>
+	<script type="text/javascript" src="<c:url value="/js/foundation.min.js"/>" ></script>
+	<script type="text/javascript" src="<c:url value="/js/foundation/foundation.reveal.js"/>" ></script>
+	<script type="text/javascript">
+		var classifierEnumDict = {}
+		<c:forEach items="${enumList}" var="classifier">
+		classifierEnumDict["${classifier.id}"] = "${classifier.name}";
+		</c:forEach>
+
+		$(function() {
+			$("#availableClassifiers, #selectedClassifiers").sortable({
+				connectWith: ".classifierList"
+			}).disableSelection();
+		});
+
+		$("#dismissFilterButton").click(function(){
+			$('#modalTextFilter').foundation('reveal', 'close');
+			
+			setTimeout(function() {
+				$('#textFilterInputsContainer').empty();    
+			}, 300);
+		});	
+		
+		$("#goFilterButton").click(function(){
+			var arrayClassifier = [];
+			
+			$("ul#selectedClassifiers li").each(function(){
+				arrayClassifier.push($(this).data("value"));
+			});
+
+			if(arrayClassifier.length == 0){
+				alert("Escolha pelo menos um classificador");
+				return;
+			}
+
+
+			for(var i=0; i<arrayClassifier.length; i++){
+				$('<div>').addClass('row').append(
+					$('<div>').addClass('small-3 columns').append(
+						$('<label>').addClass('right inline')
+						.attr({
+							for: "textFilter_" + arrayClassifier[i]
+						}).text(classifierEnumDict[arrayClassifier[i]] + ': ')
+					)
+				).append(
+					$('<div>').addClass('small-9 columns left').append(
+						$('<input>').attr({
+							type: "text",
+							name: "idListTextFilter" + "["+i+"]",
+							id: "textFilter_" + arrayClassifier[i]
+						})
+					)
+								
+				).appendTo('#textFilterInputsContainer');
+			}
+			
+			$('#modalTextFilter').foundation('reveal', 'open');
+		});
+
+		$("#form").submit(function(){
+			var arrayClassifier = [];
+			
+			$("ul#selectedClassifiers li").each(function(){
+				arrayClassifier.push($(this).data("value"));
+			});
+
+			//Fix Firefox Back Button Error
+			for(var i=0; i<${enumSize}; i++){
+				$('input[name="idList[' +i+ ']"]').remove();
+			}
+				
+			for(var i=0; i<arrayClassifier.length; i++){
+				$('<input>').attr({
+					type: "hidden",
+					name: "idList" + "["+i+"]",
+					value: arrayClassifier[i]
+				}).appendTo('#form');					
+			}	
+		});
+	</script>
 </body>
 </html>

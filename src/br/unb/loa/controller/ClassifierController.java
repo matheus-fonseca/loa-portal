@@ -80,7 +80,6 @@ public class ClassifierController {
 		List<ClassifierType> enumList;
 		enumList = Arrays.asList(ClassifierType.values());
 		
-		result.include("selectedYear", YEAR_DEFAULT);
 		result.include("loaYears", loaYears);
 		result.include("defaultYear", YEAR_DEFAULT);
 		result.include("enumList", enumList);
@@ -89,11 +88,24 @@ public class ClassifierController {
 	
 	@Post
 	@Path("/classificadores/busca")
-	public void item(List<String> idList, int year){
+	public void item(List<String> idList, List<String> idListTextFilter, int year){
 		List<ClassifierType> typeList;
 		List<Item> itemList;
 		
+		for (int i = 0; i < idListTextFilter.size(); i++) {
+			String filter = idListTextFilter.get(i);
+		    if (filter != null) {
+		    	filter = filter.trim();
+		    }
+		}
+		
+		System.out.println(idListTextFilter);
+		
 		typeList = ClassifierUtil.getClassifierTypeListByIds( idList );
+		
+		if (idListTextFilter != null) {
+			return;
+		}
 		
 		if(typeList.isEmpty()){
 			send404Error();

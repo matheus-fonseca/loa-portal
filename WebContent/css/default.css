@@ -74,3 +74,16 @@ footer, #push {
 .sortableList a {
 	background-color: #003366;
 }
+
+#form {
+	margin-top: 30px;
+}
+
+#textFilterInputsContainer label {
+	font-size: 12px;
+	font-weight: bold;
+}
+
+#submitContainer {
+	margin-top: 20px;
+}
