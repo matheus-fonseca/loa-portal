@@ -35,7 +35,7 @@ public class ItemDAO implements SimpleDAO<Item, ClassifierType>{
 		this.endpoint = new EndpointSPARQL();
 	}
 	
-	public List<Item> searchByType(ClassifierType type, int year) {
+	public List<Item> searchValuesByType(ClassifierType type, int year) {
 
 		List<Item> items;
 		List<ClassifierType> wrapperTypeList;
@@ -43,26 +43,26 @@ public class ItemDAO implements SimpleDAO<Item, ClassifierType>{
 		wrapperTypeList = new ArrayList<ClassifierType>();
 		wrapperTypeList.add(type);
 		
-		items = searchByTypeList(wrapperTypeList, year);
+		items = searchValuesByTypeList(wrapperTypeList, year);
 		
 		return items;
 	}
 	
-	public List<Item> searchByTypeList(List<ClassifierType> typeList, int year) {
+	public List<Item> searchValuesByTypeList(List<ClassifierType> typeList, int year) {
 		
 		ResultSet result;
 		String query;
 		List<Item> items;
 		
-		query = buildQuery(typeList, year);
+		query = buildValuesQuery(typeList, year);
 		result = endpoint.execSPARQLQuery(query);
 		
-		items = (result != null ) ? convertResultQuery(result, typeList, year) : null;
+		items = (result != null ) ? convertValuesResultQuery(result, typeList, year) : null;
 		
 		return items;
 	}
 	
-	private String buildQuery(List<ClassifierType> typeList, int year){
+	private String buildValuesQuery(List<ClassifierType> typeList, int year){
         
 		ClassifierType type;
 		String query, classifierCode;
@@ -103,7 +103,7 @@ public class ItemDAO implements SimpleDAO<Item, ClassifierType>{
 		return query;
 	}
 		
-	private List<Item> convertResultQuery(ResultSet result, List<ClassifierType> typeList, int year){
+	private List<Item> convertValuesResultQuery(ResultSet result, List<ClassifierType> typeList, int year){
 	
 		List<Item> items;
 		
@@ -154,6 +154,72 @@ public class ItemDAO implements SimpleDAO<Item, ClassifierType>{
 		}
 		
 		return items;
+	}
+
+	@Override
+	public List<Classifier> searchCodesByType(ClassifierType type, int year) {
+		ResultSet result;
+		String query;
+		List<Classifier> classifiers;
+		
+		query = buildCodesQuery(type, year);
+		
+		result = endpoint.execSPARQLQuery(query);
+		
+		classifiers = (result != null ) ? convertCodesResultQuery(result, type, year) : null;
+		
+		return classifiers;
+	}
+	
+	/**
+	 * @param typeList
+	 * @param year
+	 * @return
+	 */
+	private String buildCodesQuery(ClassifierType classifierType, int year) {
+		String query =
+				"PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>"+
+                "PREFIX loa: <http://vocab.e.gov.br/2013/09/loa#>" +
+                "PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>" +
+                "SELECT ?code ?label WHERE " +
+        		"{" +
+	        	"	GRAPH <http://orcamento.dados.gov.br/"+year+"/>" +
+	        	"	{" +
+		        "		?classifier a loa:"+classifierType.getClassifierClass()+";" +
+		        "		loa:codigo ?code;" +
+		        "		rdfs:label ?label" +
+	        	"	}" +
+        		"} ORDER BY ?code";
+		
+		return query;
+	}
+		
+	private List<Classifier> convertCodesResultQuery(ResultSet result, ClassifierType classifierType, int year){
+		
+		List<Classifier> classifiers = new ArrayList<Classifier>();
+		
+		while(result.hasNext()){
+		
+			QuerySolution qsol;
+			RDFNode labelNode, codeNode;
+			String label, code;
+			
+			qsol = result.nextSolution() ;
+			
+			codeNode = qsol.get("code");
+			labelNode = qsol.get("label");
+		
+
+			byte codeByteText[] = ((Literal)codeNode).getLexicalForm().getBytes(ISO_8859_1); 
+			code = new String(codeByteText, UTF_8);
+			
+			byte labelByteText[] = ((Literal)labelNode).getLexicalForm().getBytes(ISO_8859_1); 
+			label = new String(labelByteText, UTF_8);
+			
+			classifiers.add(new Classifier(label, code, year, classifierType));
+		}
+		
+		return classifiers;
 	}
 
 }

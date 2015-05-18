@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import br.com.caelum.vraptor.Get;
 import br.com.caelum.vraptor.Path;
 import br.com.caelum.vraptor.Post;
 import br.com.caelum.vraptor.Resource;
@@ -12,9 +13,11 @@ import br.com.caelum.vraptor.Validator;
 import br.com.caelum.vraptor.view.Results;
 import br.unb.loa.data.ItemDAO;
 import br.unb.loa.data.SimpleDAO;
+import br.unb.loa.model.Classifier;
 import br.unb.loa.model.ClassifierType;
 import br.unb.loa.model.Item;
 import br.unb.loa.util.ClassifierUtil;
+import static br.com.caelum.vraptor.view.Results.json;
 
 @Resource
 public class ClassifierController {
@@ -60,7 +63,7 @@ public class ClassifierController {
 			return;
 		}
 
-		itemList = classifierDAO.searchByType(enumType, year);
+		itemList = classifierDAO.searchValuesByType(enumType, year);
 		
 		if(itemList == null){
 			send500Error();
@@ -84,6 +87,29 @@ public class ClassifierController {
 		result.include("defaultYear", YEAR_DEFAULT);
 		result.include("enumList", enumList);
 		result.include("enumSize", enumList.size());
+	}
+	
+	@Get
+	@Path("/json/classificador/{enumID}/{year:[0-9]{4}}")
+	public void jsonClassifier(String enumID, int year){
+		ClassifierType enumType;
+		List<Classifier> classifiers;
+		
+		enumType = ClassifierUtil.getClassifierTypeById(enumID);
+		
+		if (enumType == null) {
+			send404Error();
+			return;
+		}
+
+		classifiers = classifierDAO.searchCodesByType(enumType, year);
+		
+		if(classifiers == null){
+			send500Error();
+			return;
+		}
+		
+		result.use(json()).from(classifiers).serialize();
 	}
 	
 	@Post
@@ -112,7 +138,7 @@ public class ClassifierController {
 			return;
 		}
 		
-		itemList = classifierDAO.searchByTypeList(typeList, year);
+		itemList = classifierDAO.searchValuesByTypeList(typeList, year);
 		
 		if(itemList == null){
 			send500Error();

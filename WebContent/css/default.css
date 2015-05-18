@@ -76,12 +76,16 @@ footer, #push {
 }
 
 #form {
-	margin-top: 30px;
+	margin-top: 40px;
 }
 
 #textFilterInputsContainer label {
 	font-size: 12px;
 	font-weight: bold;
+}
+
+#textFilterInputsContainer select {
+	font-size: 12px;
 }
 
 #submitContainer {

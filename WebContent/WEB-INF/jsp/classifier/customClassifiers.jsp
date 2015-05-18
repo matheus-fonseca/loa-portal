@@ -60,9 +60,7 @@
 				<h6 class="subheader"> Deixei em branco caso não deseje filtragem.</h6>
 				
 				<form id="form" action="<c:url value="/classificadores/busca"/>" method="post">
-					<div class="row">
-						<div id="textFilterInputsContainer" class="small-11 columns"></div>
-					</div>
+					<div id="textFilterInputsContainer" class="row"> </div>
 					
 					<div id="hiddenClassifiers"></div>
 					<input type="hidden" name="year" value="${defaultYear}">
@@ -151,6 +149,38 @@
 		classifierEnumDict["${classifier.id}"] = "${classifier.name}";
 		</c:forEach>
 
+		function putFilterOptions(json, classifierId, index) {
+			$('<div>').addClass('row').append(
+				$('<div>').addClass('small-3 columns').append(
+					$('<label>').addClass('right inline')
+					.attr({
+						for: "textFilter_" + classifierId
+					}).text(classifierEnumDict[classifierId] + ': ')
+				)
+			).append(
+				$('<div>').addClass('small-9 columns').append(
+					$('<div>').addClass('row collapse').append(
+						$('<div>').addClass('small-8 columns').append(
+							$('<input>').attr({
+								type: "text",
+								name: "idListTextFilter" + "["+index+"]",
+								id: "textFilter_" +classifierId
+							})
+						)
+					).append(
+						$('<div>').addClass('small-4 columns').append(	
+							'<select class="small"> \
+					         	<option>&lt;ou selecione aqui&gt;</option> \
+					         	<option value="husker">1 - Primária obrigatória, considerada no cálculo do RP</option> \
+					         	<option value="starbuck">01901 - Fundo Rotativo da Câmara dos Deputados</option> \
+					         	<option value="hotdog">000K - Subvenção Econômica em Operações de Financiamento no âmbito do Programa de Sustentação do Investimento e do Programa Emergencial de Reconstrução de Municípios Afetados por Desastres Naturais (Leis nº 12.096, de 2009 e nº 12.409, de 2011)</option> \
+					        </select>'
+						)
+					)
+				)
+			).appendTo('#textFilterInputsContainer');
+		}
+		
 		$(function() {
 			$("#availableClassifiers, #selectedClassifiers").sortable({
 				connectWith: ".classifierList"
@@ -177,28 +207,25 @@
 				return;
 			}
 
-
-			for(var i=0; i<arrayClassifier.length; i++){
-				$('<div>').addClass('row').append(
-					$('<div>').addClass('small-3 columns').append(
-						$('<label>').addClass('right inline')
-						.attr({
-							for: "textFilter_" + arrayClassifier[i]
-						}).text(classifierEnumDict[arrayClassifier[i]] + ': ')
-					)
-				).append(
-					$('<div>').addClass('small-9 columns left').append(
-						$('<input>').attr({
-							type: "text",
-							name: "idListTextFilter" + "["+i+"]",
-							id: "textFilter_" + arrayClassifier[i]
-						})
-					)
-								
-				).appendTo('#textFilterInputsContainer');
-			}
-			
 			$('#modalTextFilter').foundation('reveal', 'open');
+			$('#textFilterInputsContainer').html('<img src="<c:url value="/img/carregando.gif"/>" />');
+			
+			for(var i=0; i<arrayClassifier.length; i++) {
+				var url = "/loa-portal/json/classificador/"+arrayClassifier[i]+"/${defaultYear}";
+				console.log(url);
+				
+			    $.ajax({
+			        type: "GET",
+			        dataType: "json",
+			        url: url,
+			        success: function(json) {
+			        	console.log('classifierId = ' + arrayClassifier[i]);
+			        	console.log('index = ' + i);
+			        	
+			        	putFilterOptions(json, arrayClassifier[i], i);
+			        }
+			    });
+			}
 		});
 
 		$("#form").submit(function(){
