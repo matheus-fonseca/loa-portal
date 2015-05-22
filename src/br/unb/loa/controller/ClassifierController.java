@@ -114,31 +114,31 @@ public class ClassifierController {
 	
 	@Post
 	@Path("/classificadores/busca")
-	public void item(List<String> idList, List<String> idListTextFilter, int year){
-		List<ClassifierType> typeList;
-		List<Item> itemList;
+	public void item(List<String> idList, List<String> idListTextFilter, List<String>  idListCodeFilter, int year){
+		List<ClassifierType> typeList = null;
+		List<Item> itemList = null;
+
+		// TODO: Relizar uma query que utilize os filtros textuais de 'idListTextFilter' ou os filtros de codigo exato de 'idListCodeFilter'
 		
 		for (int i = 0; i < idListTextFilter.size(); i++) {
-			String filter = idListTextFilter.get(i);
-		    if (filter != null) {
-		    	filter = filter.trim();
-		    }
+			String textFilter = idListTextFilter.get(i);
+		    if (textFilter != null) {
+		    	textFilter = textFilter.trim();
+		    } 
 		}
 		
+		System.out.println(idListCodeFilter);
 		System.out.println(idListTextFilter);
-		
+
 		typeList = ClassifierUtil.getClassifierTypeListByIds( idList );
-		
-		if (idListTextFilter != null) {
-			return;
-		}
-		
+
 		if(typeList.isEmpty()){
 			send404Error();
 			return;
 		}
 		
-		itemList = classifierDAO.searchValuesByTypeList(typeList, year);
+		// TODO: Criar metodo que faca a query
+//		itemList = classifierDAO.searchValuesByTypeList(typeList, year);
 		
 		if(itemList == null){
 			send500Error();

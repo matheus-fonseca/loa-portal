@@ -181,7 +181,7 @@ public class ItemDAO implements SimpleDAO<Item, ClassifierType>{
 				"PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>"+
                 "PREFIX loa: <http://vocab.e.gov.br/2013/09/loa#>" +
                 "PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>" +
-                "SELECT ?code ?label WHERE " +
+                "SELECT DISTINCT ?code ?label WHERE " +
         		"{" +
 	        	"	GRAPH <http://orcamento.dados.gov.br/"+year+"/>" +
 	        	"	{" +

@@ -91,3 +91,7 @@ footer, #push {
 #submitContainer {
 	margin-top: 20px;
 }
+
+#textFilterInputsContainer img {
+	margin: 0 auto;
+}

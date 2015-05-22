@@ -144,41 +144,67 @@
 	<script type="text/javascript" src="<c:url value="/js/foundation.min.js"/>" ></script>
 	<script type="text/javascript" src="<c:url value="/js/foundation/foundation.reveal.js"/>" ></script>
 	<script type="text/javascript">
-		var classifierEnumDict = {}
+		var classifiersEnumDict = {}
 		<c:forEach items="${enumList}" var="classifier">
-		classifierEnumDict["${classifier.id}"] = "${classifier.name}";
+		classifiersEnumDict["${classifier.id}"] = "${classifier.name}";
 		</c:forEach>
+		var classifiersArray = [];
+		var classifiersJsonDict = {};
+		var ajaxRequestsCount = 0;
+		
+		function putFilterOptions() {
+			var allFilters = [];
+			
+			for(var i=0; i<classifiersArray.length; i++) {
+				var filterSelect = $('<select>').attr({
+									name: "idListCodeFilter["+i+"]"
+									});
 
-		function putFilterOptions(json, classifierId, index) {
-			$('<div>').addClass('row').append(
-				$('<div>').addClass('small-3 columns').append(
-					$('<label>').addClass('right inline')
-					.attr({
-						for: "textFilter_" + classifierId
-					}).text(classifierEnumDict[classifierId] + ': ')
-				)
-			).append(
-				$('<div>').addClass('small-9 columns').append(
-					$('<div>').addClass('row collapse').append(
-						$('<div>').addClass('small-8 columns').append(
-							$('<input>').attr({
-								type: "text",
-								name: "idListTextFilter" + "["+index+"]",
-								id: "textFilter_" +classifierId
-							})
+				filterSelect.append('<option value=""/>');
+
+				var classifierJson = classifiersJsonDict[classifiersArray[i]]["list"];
+				for(var j=0; j<classifierJson.length; j++) {
+					var code = classifierJson[j]["code"];
+					var label = classifierJson[j]["label"];
+					
+					filterSelect.append(
+						'<option value="'+code+'">'+code+' - '+label+'</option>'
+					);
+				}
+				
+				allFilters.push(
+					$('<div>').addClass('row').append(
+						$('<div>').addClass('small-3 columns').append(
+							$('<label>').addClass('right inline')
+							.attr({
+								for: "textFilter_" + classifiersArray[i]
+							}).text(classifiersEnumDict[classifiersArray[i]] + ': ')
 						)
 					).append(
-						$('<div>').addClass('small-4 columns').append(	
-							'<select class="small"> \
-					         	<option>&lt;ou selecione aqui&gt;</option> \
-					         	<option value="husker">1 - Primária obrigatória, considerada no cálculo do RP</option> \
-					         	<option value="starbuck">01901 - Fundo Rotativo da Câmara dos Deputados</option> \
-					         	<option value="hotdog">000K - Subvenção Econômica em Operações de Financiamento no âmbito do Programa de Sustentação do Investimento e do Programa Emergencial de Reconstrução de Municípios Afetados por Desastres Naturais (Leis nº 12.096, de 2009 e nº 12.409, de 2011)</option> \
-					        </select>'
+						$('<div>').addClass('small-9 columns').append(
+							$('<div>').addClass('row collapse').append(
+								$('<div>').addClass('small-8 columns').append(
+									$('<input>').attr({
+										type: "text",
+										name: "idListTextFilter" + "["+i+"]",
+										id: "textFilter_" +classifiersArray[i]
+									})
+								)
+							).append(
+								$('<div>').addClass('small-4 columns').append(
+									filterSelect
+								)
+							)
 						)
 					)
-				)
-			).appendTo('#textFilterInputsContainer');
+				);
+			}
+
+			$('#loading').remove();
+
+			allFilters.forEach(function(filter) {
+				filter.appendTo('#textFilterInputsContainer')
+			});
 		}
 		
 		$(function() {
@@ -196,55 +222,54 @@
 		});	
 		
 		$("#goFilterButton").click(function(){
-			var arrayClassifier = [];
+			classifiersArray = [];
+			ajaxRequestsCount = 0;
+			classifiersJsonDict = {};
 			
 			$("ul#selectedClassifiers li").each(function(){
-				arrayClassifier.push($(this).data("value"));
+				classifiersArray.push($(this).data("value"));
 			});
-
-			if(arrayClassifier.length == 0){
+			
+			if(classifiersArray.length == 0){
 				alert("Escolha pelo menos um classificador");
 				return;
 			}
 
 			$('#modalTextFilter').foundation('reveal', 'open');
-			$('#textFilterInputsContainer').html('<img src="<c:url value="/img/carregando.gif"/>" />');
-			
-			for(var i=0; i<arrayClassifier.length; i++) {
-				var url = "/loa-portal/json/classificador/"+arrayClassifier[i]+"/${defaultYear}";
-				console.log(url);
-				
-			    $.ajax({
-			        type: "GET",
-			        dataType: "json",
-			        url: url,
-			        success: function(json) {
-			        	console.log('classifierId = ' + arrayClassifier[i]);
-			        	console.log('index = ' + i);
-			        	
-			        	putFilterOptions(json, arrayClassifier[i], i);
-			        }
-			    });
-			}
+			$('#textFilterInputsContainer').html('<img id="loading" src="<c:url value="/img/carregando.gif"/>" />');
+			setTimeout(function(){
+				classifiersArray.forEach(function(classifier) {
+					var url = "/loa-portal/json/classificador/"+classifier+"/${defaultYear}";
+					
+				    $.ajax({
+				        type: "GET",
+				        dataType: "json",
+				        url: url,
+				        success: function(json) {
+				        	classifiersJsonDict[classifier] = json;
+				        	
+				        	ajaxRequestsCount++;
+
+				        	if (ajaxRequestsCount >= classifiersArray.length) {
+				        		putFilterOptions();
+						    }
+				        }
+				    });
+				});
+			}, 1000);
 		});
 
 		$("#form").submit(function(){
-			var arrayClassifier = [];
-			
-			$("ul#selectedClassifiers li").each(function(){
-				arrayClassifier.push($(this).data("value"));
-			});
-
 			//Fix Firefox Back Button Error
 			for(var i=0; i<${enumSize}; i++){
 				$('input[name="idList[' +i+ ']"]').remove();
 			}
 				
-			for(var i=0; i<arrayClassifier.length; i++){
+			for(var i=0; i<classifiersArray.length; i++){
 				$('<input>').attr({
 					type: "hidden",
 					name: "idList" + "["+i+"]",
-					value: arrayClassifier[i]
+					value: classifiersArray[i]
 				}).appendTo('#form');					
 			}	
 		});
